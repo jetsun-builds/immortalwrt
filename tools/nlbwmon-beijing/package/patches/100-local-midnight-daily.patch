@@ -1,0 +1,27 @@
+--- a/timing.c
++++ b/timing.c
+@@ -144,6 +144,24 @@
+ 	value = (int32_t)be32toh(intv->value);
+ 
+ 	now = time(NULL);
++	/*
++	 * A one-day interval is a local calendar day. Do not truncate the
++	 * epoch to UTC midnight: that rotates at 08:00 in Asia/Shanghai.
++	 * Keep the serialized anchor unchanged so existing databases load.
++	 */
++	if (value == 1) {
++		struct tm day = *localtime(&now);
++
++		day.tm_mday += offset;
++		day.tm_isdst = -1;
++		now = mktime(&day);
++		loc = localtime(&now);
++
++		return ((loc->tm_year + 1900) * 10000 +
++		        (loc->tm_mon  +    1) *   100 +
++		         loc->tm_mday);
++	}
++
+ 	now -= now % 86400;
+ 	now += offset * (value * 86400);
+ 
