@@ -21,6 +21,7 @@ test "$(git -C feeds/base rev-parse HEAD)" = "0c4cd0f9920a420a2ac95b49c1b6213076
 test "$(git -C feeds/packages rev-parse HEAD)" = "84bd86384928955b568988ca0e09e2c78c75173d"
 cp -a "$ROOT/package/." feeds/packages/net/nlbwmon/
 # Discard the SDK's preselected packages before selecting only nlbwmon.
+touch .config
 sed -i -E '/^CONFIG_PACKAGE_.*=/d; /^CONFIG_ALL(_KMODS|_NONSHARED)?=/d' .config
 cat >> .config <<'CONFIG'
 CONFIG_PACKAGE_nlbwmon=m
