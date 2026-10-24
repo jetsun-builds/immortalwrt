@@ -11,11 +11,17 @@ echo "$SDK_HASH  $TOP/sdk.tar.zst" | sha256sum -c -
 mkdir "$TOP/sdk"
 tar --zstd -xf "$TOP/sdk.tar.zst" -C "$TOP/sdk" --strip-components=1
 cd "$TOP/sdk"
-printf '%s\n' 'src-git packages https://github.com/immortalwrt/packages.git^84bd86384928955b568988ca0e09e2c78c75173d' > feeds.conf
-./scripts/feeds update packages
+printf '%s\n' \
+  'src-git base https://github.com/immortalwrt/immortalwrt.git^0c4cd0f9920a420a2ac95b49c1b62130769c08ae' \
+  'src-git packages https://github.com/immortalwrt/packages.git^84bd86384928955b568988ca0e09e2c78c75173d' > feeds.conf
+./scripts/feeds update base packages
+./scripts/feeds install -p base libubox libnl-tiny zlib
 ./scripts/feeds install -p packages nlbwmon
+test "$(git -C feeds/base rev-parse HEAD)" = "0c4cd0f9920a420a2ac95b49c1b62130769c08ae"
 test "$(git -C feeds/packages rev-parse HEAD)" = "84bd86384928955b568988ca0e09e2c78c75173d"
 cp -a "$ROOT/package/." feeds/packages/net/nlbwmon/
+# Discard the SDK's preselected packages before selecting only nlbwmon.
+sed -i -E '/^CONFIG_PACKAGE_.*=/d; /^CONFIG_ALL(_KMODS|_NONSHARED)?=/d' .config
 cat >> .config <<'CONFIG'
 CONFIG_PACKAGE_nlbwmon=m
 # CONFIG_SIGNED_PACKAGES is not set
@@ -51,6 +57,7 @@ test -n "$LOADER"
   echo "SDK: $SDK_URL"
   echo "SDK SHA256: $SDK_HASH"
   echo "Source: 29236be687927b0c81ee6e2642e7caa8787c4ad3"
+  echo "Base feed: $(git -C feeds/base rev-parse HEAD)"
   echo "Packages feed: $(git -C feeds/packages rev-parse HEAD)"
   echo "Recipe release: 100"
   echo "Built at UTC: $(date -u +%FT%TZ)"

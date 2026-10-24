@@ -1,7 +1,7 @@
 # nlbwmon: ImmortalWrt 25.12.2 x86/64 / 北京时间零点日切
 
 构建目标：ImmortalWrt 25.12.2，r38135-0c4cd0f9920a，x86_64，musl，APK。
-官方 SDK 与 SHA256、发布版 packages feed 和 nlbwmon 源码提交均固定在 sdk.lock.json。
+官方 SDK 与 SHA256、发布版 base/packages feed 和 nlbwmon 源码提交均固定在 sdk.lock.json。
 包版本为 2025.06.02~29236be6-r100，属于本地定制补丁，不是厂商正式发行包。
 
 ## 修改范围
