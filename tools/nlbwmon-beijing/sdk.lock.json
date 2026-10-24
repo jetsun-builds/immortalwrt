@@ -1,0 +1,17 @@
+{
+  "release": "25.12.2",
+  "target": "x86/64",
+  "architecture": "x86_64",
+  "revision": "r38135-0c4cd0f9920a",
+  "sdk_url": "https://downloads.immortalwrt.org/releases/25.12.2/targets/x86/64/immortalwrt-sdk-25.12.2-x86-64_gcc-14.3.0_musl.Linux-x86_64.tar.zst",
+  "sdk_sha256": "4d4631f134c2f27215a91aa7ef5bf9a01ea96c2450d3b8a5c38048c32462ac60",
+  "packages_commit": "84bd86384928955b568988ca0e09e2c78c75173d",
+  "source_commit": "29236be687927b0c81ee6e2642e7caa8787c4ad3",
+  "expected_needed": [
+    "libubox.so.20260213",
+    "libnl-tiny.so.1",
+    "libz.so.1",
+    "libc.so"
+  ],
+  "custom_package_release": 100
+}
