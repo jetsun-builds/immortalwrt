@@ -31,7 +31,7 @@ CONFIG_PACKAGE_nlbwmon=m
 # CONFIG_ALL_KMODS is not set
 CONFIG
 make defconfig
-make -j2 package/nlbwmon/compile V=s
+make -j2 package/nlbwmon/compile CONFIG_AUTOREMOVE= V=s
 mapfile -t PACKAGES < <(find bin/packages -type f -name 'nlbwmon-*.apk' -print)
 test "${#PACKAGES[@]}" = "1"
 cp "$PACKAGES" "$TOP/dist/"
