@@ -35,6 +35,14 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 30
+      - name: Upload partial outputs for failed-build diagnosis
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nlbwmon-unvalidated-debug-${{ github.run_number }}
+          path: dist/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4

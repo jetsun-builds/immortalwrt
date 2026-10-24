@@ -11,8 +11,10 @@
     "libubox.so.20260213",
     "libnl-tiny.so.1",
     "libz.so.1",
+    "libgcc_s.so.1",
     "libc.so"
   ],
   "custom_package_release": 100,
-  "base_commit": "0c4cd0f9920a420a2ac95b49c1b62130769c08ae"
+  "base_commit": "0c4cd0f9920a420a2ac95b49c1b62130769c08ae",
+  "router_libgcc_version": "14.3.0-r5"
 }
