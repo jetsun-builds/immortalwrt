@@ -23,7 +23,7 @@ for nic in ('e1000', 'vmxnet3'):
     variables = out / f'ovmf-{nic}.fd'
     shutil.copyfile(vars_template, variables)
     args = [
-        '-machine', 'q35', '-accel', 'tcg', '-m', '1024', '-smp', '2',
+        '-machine', 'q35', '-accel', 'tcg', '-cpu', 'max', '-m', '1024', '-smp', '2',
         '-drive', f'if=pflash,format=raw,readonly=on,file={code}',
         '-drive', f'if=pflash,format=raw,file={variables}',
         '-drive', f'if=ide,format=vmdk,file={image},snapshot=on',
@@ -41,7 +41,10 @@ for nic in ('e1000', 'vmxnet3'):
             child.expect('Please press Enter to activate this console')
             child.sendline('')
             child.expect(r'root@[^\r\n]*[~/#] ')
-            child.sendline('stty -echo')
+            # The guest shell has a short interactive line buffer and no stty.
+            # Allow first-boot defaults and its network restart to finish.
+            child.sendline("sleep 40; printf 'VMWARE_%s\\n' READY")
+            child.expect('VMWARE_READY', timeout=90)
             child.expect(r'root@[^\r\n]*[~/#] ')
             checks = [
                 'test -d /sys/firmware/efi',
@@ -62,11 +65,15 @@ for nic in ('e1000', 'vmxnet3'):
                 'for n in $(seq 1 60); do [ "$(ubus call network.interface.wan status | jsonfilter -e @.up)" = true ] && break; sleep 2; done',
                 'test "$(ubus call network.interface.wan status | jsonfilter -e @.up)" = true',
             ]
-            command = '( sleep 15; ' + ' && '.join(checks) + " ) && printf 'VMWARE_%s\\n' PASS || printf 'VMWARE_%s\\n' FAIL"
-            child.sendline(command)
-            index = child.expect(['VMWARE_PASS', 'VMWARE_FAIL', pexpect.EOF, pexpect.TIMEOUT], timeout=240)
-            if index != 0:
-                raise RuntimeError(f'{nic}: boot or network validation failed; see boot-{nic}.log')
+            for check in checks:
+                print(f'{nic}: checking {check}', flush=True)
+                command = '( ' + check + " ) && printf 'VMWARE_%s\\n' PASS || printf 'VMWARE_%s\\n' FAIL"
+                assert len(command) < 400, 'Guest shell input line too long'
+                child.sendline(command)
+                index = child.expect(['VMWARE_PASS', 'VMWARE_FAIL', pexpect.EOF, pexpect.TIMEOUT], timeout=150)
+                if index != 0:
+                    raise RuntimeError(f'{nic}: check failed: {check}; see boot-{nic}.log')
+                child.expect(r'root@[^\r\n]*[~/#] ')
             results.append({'nic': nic, 'firmware': 'UEFI', 'disk_controller': 'SATA', 'result': 'passed'})
             print(f'{nic}: UEFI, SATA, WAN DHCP, LAN bridge, firewall, TUN and tools passed', flush=True)
         except Exception:
