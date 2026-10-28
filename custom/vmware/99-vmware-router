@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+uci set system.@system[0].hostname='ImmortalWrt-VMware'
+uci set system.@system[0].zonename='Asia/Shanghai'
+uci set system.@system[0].timezone='CST-8'
+uci set dhcp.lan.ignore='0'
+uci set dhcp.lan.start='100'
+uci set dhcp.lan.limit='150'
+uci set dhcp.lan.leasetime='12h'
+uci commit system
+uci commit dhcp
+exit 0
