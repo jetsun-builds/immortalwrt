@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Boot disposable VMDK snapshots with EFI, VMware SCSI, and two NIC models."""
+"""Boot disposable VMDK snapshots with EFI, SATA, and two NIC models."""
 from pathlib import Path
 import json
 import shutil
@@ -26,9 +26,8 @@ for nic in ('e1000', 'vmxnet3'):
         '-machine', 'q35', '-accel', 'tcg', '-m', '1024', '-smp', '2',
         '-drive', f'if=pflash,format=raw,readonly=on,file={code}',
         '-drive', f'if=pflash,format=raw,file={variables}',
-        '-device', 'pvscsi,id=scsi',
-        '-drive', f'if=none,id=disk,format=vmdk,file={image},snapshot=on',
-        '-device', 'scsi-hd,drive=disk,bus=scsi.0,bootindex=1',
+        '-drive', f'if=ide,format=vmdk,file={image},snapshot=on',
+        '-boot', 'order=c,strict=on',
         '-netdev', 'user,id=wan,net=10.0.2.0/24',
         '-device', f'{nic},netdev=wan,mac=52:54:00:12:34:00',
         '-netdev', 'user,id=lan,net=192.0.2.0/24,restrict=on',
@@ -36,7 +35,7 @@ for nic in ('e1000', 'vmxnet3'):
         '-display', 'none', '-serial', 'stdio', '-monitor', 'none', '-no-reboot',
     ]
     with (out / f'boot-{nic}.log').open('w') as log:
-        child = pexpect.spawn('qemu-system-x86_64', args, encoding='utf-8', codec_errors='replace', timeout=300)
+        child = pexpect.spawn('qemu-system-x86_64', args, encoding='utf-8', codec_errors='replace', timeout=120)
         child.logfile = log
         try:
             child.expect('Please press Enter to activate this console')
@@ -68,8 +67,12 @@ for nic in ('e1000', 'vmxnet3'):
             index = child.expect(['VMWARE_PASS', 'VMWARE_FAIL', pexpect.EOF, pexpect.TIMEOUT], timeout=240)
             if index != 0:
                 raise RuntimeError(f'{nic}: boot or network validation failed; see boot-{nic}.log')
-            results.append({'nic': nic, 'firmware': 'UEFI', 'disk_controller': 'VMware PVSCSI', 'result': 'passed'})
-            print(f'{nic}: UEFI, VMware SCSI, WAN DHCP, LAN bridge, firewall, TUN and tools passed', flush=True)
+            results.append({'nic': nic, 'firmware': 'UEFI', 'disk_controller': 'SATA', 'result': 'passed'})
+            print(f'{nic}: UEFI, SATA, WAN DHCP, LAN bridge, firewall, TUN and tools passed', flush=True)
+        except Exception:
+            log.flush()
+            print((out / f'boot-{nic}.log').read_text()[-16000:], flush=True)
+            raise
         finally:
             child.close(force=True)
             variables.unlink(missing_ok=True)

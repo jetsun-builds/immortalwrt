@@ -33,7 +33,7 @@ VMware 通常不向客户机提供物理 CPU 调频功能；相关界面可能�
 
 1. 关闭虚拟机并备份原虚拟磁盘及配置。解压 Actions 的 artifact ZIP。
 2. 将解压后的 `immortalwrt-25.12.2-x86-64-generic-squashfs-combined-efi.vmdk` 放在虚拟机目录。
-3. 使用已有虚拟磁盘，把此 VMDK 设为启动磁盘。建议使用 SATA 或 VMware Paravirtual SCSI。
+3. 使用已有虚拟磁盘，把此 VMDK 设为启动磁盘。建议使用 SATA（本次自动启动测试的磁盘控制器）。
 4. 固件选择 UEFI，关闭 Secure Boot；内存 2 GB、CPU 2 核即可。
 5. 第一张网卡选 VMnet2，第二张选 VMnet3，两张均勾选开机连接。可用 E1000e 或 VMXNET3。
 6. 确保宿主机的 VMnet2/VMnet3 分别桥接到预期的 USB 网卡；两侧网络应分离。
@@ -49,7 +49,7 @@ Actions 工作流：`.github/workflows/vmware-x86-64.yml`。
 `custom/vmware/packages.txt` 保存显式包清单，`network` 保存出厂网络配置。
 
 构建固定 ImageBuilder SHA256，并使用官方签名软件仓库。
-工作流核对全部显式包，再用 QEMU/OVMF 和 VMware PVSCSI 启动磁盘的临时快照，分别测试 E1000、VMXNET3 双网卡。
+工作流核对全部显式包，再用 QEMU/OVMF 和 SATA 启动磁盘的临时快照，分别测试 E1000、VMXNET3 双网卡。
 检查 EFI、squashfs、eth0 的 WAN DHCP、eth1 的 br-lan、192.168.3.1/24、DHCP 服务、nftables、TUN 和终端工具。
 自动测试不能替代在实际 VMware 和 USB 桥接环境中的测试。
 
