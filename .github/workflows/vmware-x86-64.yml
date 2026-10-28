@@ -1,0 +1,40 @@
+name: VMware x86-64 ImmortalWrt 25.12.2
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['.github/workflows/vmware-x86-64.yml', 'custom/vmware/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vmware-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install ImageBuilder and EFI boot test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential gawk gettext \
+            libncurses-dev libssl-dev python3 python3-pexpect rsync unzip zstd \
+            qemu-utils qemu-system-x86 ovmf
+      - name: Build customized squashfs EFI VMDK
+        run: bash custom/vmware/build.sh
+      - name: Verify requested packages and boot with E1000 and VMXNET3
+        run: python3 custom/vmware/smoke-test.py dist
+      - name: Upload firmware and validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: immortalwrt-25.12.2-x86-64-vmware-efi
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
